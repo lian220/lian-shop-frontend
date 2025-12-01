@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { getAuth } from '../lib/auth';
+import { getAuth, getAuthHeaders } from '../lib/auth';
 
 interface Product {
   id: number;
@@ -207,12 +207,45 @@ export default function AdminPage() {
                           {product.stockQuantity}개
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <Link
-                            href={`/admin/products/${product.id}/edit`}
-                            className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-                          >
-                            수정
-                          </Link>
+                          <div className="flex items-center space-x-3">
+                            <Link
+                              href={`/admin/products/${product.id}/edit`}
+                              className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+                            >
+                              수정
+                            </Link>
+                            <button
+                              onClick={async () => {
+                                if (!confirm(`"${product.name}" 상품을 삭제하시겠습니까?`)) {
+                                  return;
+                                }
+                                
+                                const auth = getAuth();
+                                if (!auth) return;
+                                
+                                try {
+                                  const apiUrl = getApiUrl();
+                                  const response = await fetch(`${apiUrl}/admin/products/${product.id}`, {
+                                    method: 'DELETE',
+                                    headers: getAuthHeaders(),
+                                  });
+                                  
+                                  if (response.ok) {
+                                    // 상품 목록 새로고침
+                                    loadData();
+                                  } else {
+                                    alert('상품 삭제에 실패했습니다.');
+                                  }
+                                } catch (error) {
+                                  console.error('삭제 실패:', error);
+                                  alert('상품 삭제에 실패했습니다.');
+                                }
+                              }}
+                              className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                            >
+                              삭제
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
