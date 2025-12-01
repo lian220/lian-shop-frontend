@@ -17,10 +17,13 @@ function parsePrice(price: number | string): number {
 }
 
 async function getProduct(id: string): Promise<Product | null> {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+  // .env.local에 이미 /api가 포함되어 있을 수 있으므로 확인
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+  // baseUrl에 /api가 이미 포함되어 있으면 그대로 사용, 아니면 추가
+  const apiUrl = baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
   
   try {
-    const res = await fetch(`${apiUrl}/api/products/${id}`, {
+    const res = await fetch(`${apiUrl}/products/${id}`, {
       cache: "no-store",
       headers: {
         'Content-Type': 'application/json',
@@ -69,56 +72,177 @@ export default async function ProductPage({
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-black">
+    <div className="bg-gradient-to-b from-zinc-50 to-white dark:from-black dark:to-zinc-900 min-h-screen">
       <div className="container mx-auto px-4 py-8">
         <Link
           href="/"
-          className="text-blue-600 dark:text-blue-400 hover:underline mb-4 inline-block"
+          className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 mb-6 transition-colors group"
         >
-          ← 뒤로 가기
+          <svg
+            className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+          상품 목록으로 돌아가기
         </Link>
         
-        <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-lg overflow-hidden max-w-4xl mx-auto">
+        <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-xl overflow-hidden max-w-6xl mx-auto">
           <div className="md:flex">
-            <div className="md:w-1/2">
-              <div className="aspect-square bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center">
+            {/* 상품 이미지 */}
+            <div className="md:w-1/2 bg-gradient-to-br from-zinc-100 to-zinc-200 dark:from-zinc-800 dark:to-zinc-900">
+              <div className="aspect-square flex items-center justify-center p-8">
                 {product.imageUrl ? (
                   <img
                     src={product.imageUrl}
                     alt={product.name}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain rounded-lg"
                   />
                 ) : (
-                  <span className="text-zinc-400">이미지 없음</span>
+                  <div className="w-full h-full flex items-center justify-center">
+                    <svg
+                      className="w-32 h-32 text-zinc-300 dark:text-zinc-700"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                  </div>
                 )}
               </div>
             </div>
-            <div className="md:w-1/2 p-8">
-              <h1 className="text-3xl font-bold mb-4 text-black dark:text-zinc-50">
+
+            {/* 상품 정보 */}
+            <div className="md:w-1/2 p-8 md:p-12">
+              {/* 재고 상태 배지 */}
+              <div className="mb-4">
+                {product.stockQuantity === 0 ? (
+                  <span className="inline-block bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 px-3 py-1 rounded-full text-sm font-semibold">
+                    품절
+                  </span>
+                ) : product.stockQuantity < 10 ? (
+                  <span className="inline-block bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 px-3 py-1 rounded-full text-sm font-semibold">
+                    재고 부족
+                  </span>
+                ) : (
+                  <span className="inline-block bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-3 py-1 rounded-full text-sm font-semibold">
+                    재고 있음
+                  </span>
+                )}
+              </div>
+
+              <h1 className="text-4xl font-bold mb-4 text-zinc-900 dark:text-zinc-50">
                 {product.name}
               </h1>
-              <p className="text-2xl font-bold mb-6 text-black dark:text-zinc-50">
-                ₩{parsePrice(product.price).toLocaleString()}
-              </p>
+              
               <div className="mb-6">
-                <h2 className="font-semibold mb-2 text-black dark:text-zinc-50">
-                  상품 설명
-                </h2>
-                <p className="text-zinc-600 dark:text-zinc-400">
-                  {product.description || "설명 없음"}
-                </p>
+                <span className="text-4xl font-bold text-blue-600 dark:text-blue-400">
+                  ₩{parsePrice(product.price).toLocaleString()}
+                </span>
               </div>
-              <div className="mb-6">
-                <p className="text-sm text-zinc-500">
-                  재고: {product.stockQuantity}개
-                </p>
+
+              <div className="mb-8 space-y-4">
+                <div>
+                  <h2 className="font-semibold text-lg mb-3 text-zinc-900 dark:text-zinc-50">
+                    상품 설명
+                  </h2>
+                  <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                    {product.description || "설명 없음"}
+                  </p>
+                </div>
+                
+                <div className="flex items-center space-x-4 pt-4 border-t border-zinc-200 dark:border-zinc-700">
+                  <div>
+                    <span className="text-sm text-zinc-500 dark:text-zinc-400">재고 수량</span>
+                    <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+                      {product.stockQuantity}개
+                    </p>
+                  </div>
+                </div>
               </div>
-              <button
-                className="w-full bg-black dark:bg-white text-white dark:text-black py-3 rounded-lg font-semibold hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors"
-                disabled={product.stockQuantity === 0}
-              >
-                {product.stockQuantity > 0 ? "장바구니에 추가" : "품절"}
-              </button>
+
+              {/* 수량 선택 및 버튼 */}
+              <div className="space-y-4">
+                <div className="flex items-center space-x-4">
+                  <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                    수량:
+                  </label>
+                  <div className="flex items-center border border-zinc-300 dark:border-zinc-700 rounded-lg">
+                    <button className="px-4 py-2 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+                      -
+                    </button>
+                    <input
+                      type="number"
+                      min="1"
+                      max={product.stockQuantity}
+                      defaultValue="1"
+                      className="w-16 text-center border-x border-zinc-300 dark:border-zinc-700 py-2 bg-transparent text-zinc-900 dark:text-zinc-50"
+                    />
+                    <button className="px-4 py-2 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex space-x-3">
+                  <button
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-lg font-semibold transition-colors disabled:bg-zinc-400 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                    disabled={product.stockQuantity === 0}
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                      />
+                    </svg>
+                    <span>{product.stockQuantity > 0 ? "장바구니에 추가" : "품절"}</span>
+                  </button>
+                  <button
+                    className="flex-1 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 py-4 rounded-lg font-semibold hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors disabled:bg-zinc-400 disabled:cursor-not-allowed"
+                    disabled={product.stockQuantity === 0}
+                  >
+                    바로 구매
+                  </button>
+                </div>
+              </div>
+
+              {/* 추가 정보 */}
+              <div className="mt-8 pt-8 border-t border-zinc-200 dark:border-zinc-700">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-zinc-500 dark:text-zinc-400">배송 정보</span>
+                    <p className="text-zinc-900 dark:text-zinc-50 font-medium mt-1">
+                      무료 배송 (5만원 이상)
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-zinc-500 dark:text-zinc-400">반품/교환</span>
+                    <p className="text-zinc-900 dark:text-zinc-50 font-medium mt-1">
+                      7일 이내 가능
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
