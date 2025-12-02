@@ -3,9 +3,16 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Product } from '../types';
 import { getAuth, getAuthHeaders } from '../lib/auth';
-import { getApiUrl, getFetchOptions } from '../lib/api';
+
+interface Product {
+  id: number;
+  name: string;
+  description: string | null;
+  price: number | string;
+  stockQuantity: number;
+  imageUrl: string | null;
+}
 
 interface Order {
   id: number;
@@ -22,6 +29,11 @@ interface OrderItem {
   quantity: number;
   price: number;
 }
+
+const getApiUrl = () => {
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+  return baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
+};
 
 export default function AdminPage() {
   const router = useRouter();
@@ -57,7 +69,7 @@ export default function AdminPage() {
       }
       
       const headers: HeadersInit = {
-        ...getFetchOptions().headers as HeadersInit,
+        'Content-Type': 'application/json',
         'Authorization': `Bearer ${auth.token}`,
       };
       
@@ -81,7 +93,7 @@ export default function AdminPage() {
       // TODO: 주문 목록 API 추가 시 구현
       setOrders([]);
     } catch (error) {
-      // 데이터 로드 실패 시 무시
+      console.error('데이터 로드 실패:', error);
     } finally {
       setLoading(false);
     }
@@ -213,14 +225,9 @@ export default function AdminPage() {
                                 
                                 try {
                                   const apiUrl = getApiUrl();
-                                  const headers = {
-                                    ...getFetchOptions().headers as HeadersInit,
-                                    ...getAuthHeaders(),
-                                  };
-                                  
                                   const response = await fetch(`${apiUrl}/admin/products/${product.id}`, {
                                     method: 'DELETE',
-                                    headers,
+                                    headers: getAuthHeaders(),
                                   });
                                   
                                   if (response.ok) {
@@ -230,6 +237,7 @@ export default function AdminPage() {
                                     alert('상품 삭제에 실패했습니다.');
                                   }
                                 } catch (error) {
+                                  console.error('삭제 실패:', error);
                                   alert('상품 삭제에 실패했습니다.');
                                 }
                               }}
