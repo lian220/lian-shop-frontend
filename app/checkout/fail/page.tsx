@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
-export default function CheckoutFailPage() {
+function CheckoutFailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [errorCode, setErrorCode] = useState<string | null>(null);
@@ -85,6 +85,20 @@ export default function CheckoutFailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CheckoutFailPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-zinc-600 dark:text-zinc-400">로딩 중...</p>
+        </div>
+      </div>
+    }>
+      <CheckoutFailContent />
+    </Suspense>
   );
 }
 
