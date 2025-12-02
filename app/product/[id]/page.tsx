@@ -1,4 +1,6 @@
 import Link from "next/link";
+import Image from "next/image";
+import type { Metadata } from "next";
 
 interface Product {
   id: number;
@@ -17,24 +19,22 @@ function parsePrice(price: number | string): number {
 }
 
 async function getProduct(id: string): Promise<Product | null> {
-  // .env.local에 이미 /api가 포함되어 있을 수 있으므로 확인
   const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
-  // baseUrl에 /api가 이미 포함되어 있으면 그대로 사용, 아니면 추가
   const apiUrl = baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
-  
+
   try {
     const res = await fetch(`${apiUrl}/products/${id}`, {
-      cache: "no-store",
+      next: { revalidate: 300 }, // ISR: 5분마다 재검증
       headers: {
         'Content-Type': 'application/json',
       },
     });
-    
+
     if (!res.ok) {
       console.error(`Failed to fetch product: ${res.status} ${res.statusText}`);
       return null;
     }
-    
+
     return await res.json();
   } catch (error) {
     console.error("Error fetching product:", error);
@@ -44,6 +44,48 @@ async function getProduct(id: string): Promise<Product | null> {
     }
     return null;
   }
+}
+
+// 정적 경로 생성 (주요 상품 페이지 사전 생성)
+export async function generateStaticParams() {
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+  const apiUrl = baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
+
+  try {
+    const res = await fetch(`${apiUrl}/products`, {
+      next: { revalidate: 3600 }, // 1시간마다 재검증
+    });
+
+    if (!res.ok) return [];
+
+    const products: Product[] = await res.json();
+    return products.slice(0, 10).map((product) => ({
+      id: product.id.toString(),
+    }));
+  } catch (error) {
+    console.error("Error generating static params:", error);
+    return [];
+  }
+}
+
+// 동적 메타데이터 생성
+export async function generateMetadata({
+  params,
+}: {
+  params: { id: string };
+}): Promise<Metadata> {
+  const product = await getProduct(params.id);
+
+  if (!product) {
+    return {
+      title: '상품을 찾을 수 없습니다 - Lian Shop',
+    };
+  }
+
+  return {
+    title: `${product.name} - Lian Shop`,
+    description: product.description || `${product.name} 상품 상세 페이지`,
+  };
 }
 
 export default async function ProductPage({
@@ -93,17 +135,20 @@ export default async function ProductPage({
           </svg>
           상품 목록으로 돌아가기
         </Link>
-        
+
         <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-xl overflow-hidden max-w-6xl mx-auto">
           <div className="md:flex">
             {/* 상품 이미지 */}
             <div className="md:w-1/2 bg-gradient-to-br from-zinc-100 to-zinc-200 dark:from-zinc-800 dark:to-zinc-900">
               <div className="aspect-square flex items-center justify-center p-8">
                 {product.imageUrl ? (
-                  <img
+                  <Image
                     src={product.imageUrl}
                     alt={product.name}
-                    className="w-full h-full object-contain rounded-lg"
+                    fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    className="object-contain rounded-lg"
+                    priority={true}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
@@ -147,7 +192,7 @@ export default async function ProductPage({
               <h1 className="text-4xl font-bold mb-4 text-zinc-900 dark:text-zinc-50">
                 {product.name}
               </h1>
-              
+
               <div className="mb-6">
                 <span className="text-4xl font-bold text-blue-600 dark:text-blue-400">
                   ₩{parsePrice(product.price).toLocaleString()}
@@ -163,7 +208,7 @@ export default async function ProductPage({
                     {product.description || "설명 없음"}
                   </p>
                 </div>
-                
+
                 <div className="flex items-center space-x-4 pt-4 border-t border-zinc-200 dark:border-zinc-700">
                   <div>
                     <span className="text-sm text-zinc-500 dark:text-zinc-400">재고 수량</span>
