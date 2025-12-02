@@ -3,6 +3,7 @@ import Link from "next/link";
 import ProductDetailLoader from "./ProductDetailLoader";
 import { Product } from "../../types";
 import { getServerApiUrl, getFetchOptions } from "../../lib/api";
+import { getProductSchema, getBreadcrumbSchema } from "../../lib/seo";
 
 async function getProduct(id: string): Promise<Product | null> {
   const apiUrl = getServerApiUrl();
@@ -57,16 +58,44 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const resolvedParams = await Promise.resolve(params);
   const product = await getProduct(resolvedParams.id);
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://lian-shop.com';
 
   if (!product) {
     return {
-      title: '상품을 찾을 수 없습니다 - Lian Shop',
+      title: '상품을 찾을 수 없습니다 - 리안샵',
+      description: '요청하신 상품을 찾을 수 없습니다.',
     };
   }
 
+  const productTitle = `${product.name} - 리안샵`;
+  const productDescription = product.description || `리안샵에서 ${product.name}을(를) 만나보세요. 프리미엄 품질의 제품을 최고의 가격으로 제공합니다.`;
+  const productImage = product.imageUrl || `${baseUrl}/og-image.png`;
+
   return {
-    title: `${product.name} - Lian Shop`,
-    description: product.description || `${product.name} 상품 상세 페이지`,
+    title: productTitle,
+    description: productDescription,
+    keywords: ['리안', '리안샵', product.name, '온라인쇼핑', '프리미엄'],
+    openGraph: {
+      title: productTitle,
+      description: productDescription,
+      url: `/product/${product.id}`,
+      siteName: 'Lian Shop',
+      images: [
+        {
+          url: productImage,
+          width: 800,
+          height: 600,
+          alt: product.name,
+        },
+      ],
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: productTitle,
+      description: productDescription,
+      images: [productImage],
+    },
   };
 }
 
@@ -100,6 +129,38 @@ export default async function ProductPage({
   // 서버에서 먼저 시도하고, 실패하면 클라이언트에서 재시도
   const product = await getProduct(productId);
 
-  return <ProductDetailLoader productId={productId} initialProduct={product} />;
+  // JSON-LD 구조화된 데이터
+  const productSchema = product ? getProductSchema({
+    id: product.id,
+    name: product.name,
+    description: product.description || '',
+    price: typeof product.price === 'string' ? parseFloat(product.price) : product.price,
+    image: product.imageUrl || '',
+    brand: 'Lian Shop',
+  }) : null;
+
+  const breadcrumbSchema = getBreadcrumbSchema([
+    { name: '홈', url: '/' },
+    { name: '상품', url: '/products' },
+    { name: product?.name || '상품 상세', url: `/product/${productId}` },
+  ]);
+
+  return (
+    <>
+      {/* JSON-LD 구조화된 데이터 */}
+      {productSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
+        />
+      )}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+      
+      <ProductDetailLoader productId={productId} initialProduct={product} />
+    </>
+  );
 }
 

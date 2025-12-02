@@ -33,9 +33,10 @@ const nextConfig: NextConfig = {
     ];
   },
 
-  // 정적 파일 캐싱 헤더 설정
+  // SEO 및 성능 최적화 헤더 설정
   async headers() {
     return [
+      // 이미지 캐싱
       {
         source: '/:all*(svg|jpg|jpeg|png|gif|ico|webp|avif)',
         headers: [
@@ -45,7 +46,41 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      // 보안 헤더
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'X-DNS-Prefetch-Control',
+            value: 'on',
+          },
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains; preload',
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'SAMEORIGIN',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'origin-when-cross-origin',
+          },
+        ],
+      },
     ];
+  },
+
+  // 정적 페이지 생성 시간 연장 (큰 사이트일 경우)
+  staticPageGenerationTimeout: 180,
+
+  // 페이지 크기 제한 증가 (JSON-LD 등으로 인한)
+  experimental: {
+    // typedRoutes: true, // 타입 안전한 라우팅
   },
 };
 

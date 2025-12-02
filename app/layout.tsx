@@ -16,8 +16,58 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Lian Shop - 온라인 쇼핑몰",
-  description: "Lian Shop - 최고의 쇼핑 경험을 제공하는 온라인 쇼핑몰",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://lian-shop.com'),
+  title: {
+    default: "Lian Shop - 프리미엄 온라인 쇼핑몰",
+    template: "%s | Lian Shop",
+  },
+  description: "미니멀하고 모던한 라이프스타일 제품을 만나보세요. Lian Shop에서 프리미엄 상품을 최고의 가격으로 제공합니다.",
+  keywords: ["온라인쇼핑", "쇼핑몰", "프리미엄", "패션", "라이프스타일", "Lian Shop"],
+  authors: [{ name: "Lian Shop" }],
+  creator: "Lian Shop",
+  publisher: "Lian Shop",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  openGraph: {
+    title: "Lian Shop - 프리미엄 온라인 쇼핑몰",
+    description: "미니멀하고 모던한 라이프스타일 제품을 만나보세요",
+    url: "/",
+    siteName: "Lian Shop",
+    locale: "ko_KR",
+    type: "website",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Lian Shop",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Lian Shop - 프리미엄 온라인 쇼핑몰",
+    description: "미니멀하고 모던한 라이프스타일 제품을 만나보세요",
+    images: ["/og-image.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  verification: {
+    google: 'google-site-verification-code-here', // Google Search Console에서 받은 코드로 교체
+    // naver: 'naver-site-verification-code-here', // 네이버 서치어드바이저에서 받은 코드로 교체
+  },
 };
 
 export default function RootLayout({
