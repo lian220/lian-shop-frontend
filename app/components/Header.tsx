@@ -203,6 +203,12 @@ export default function Header() {
                           </div>
                         )}
                       </div>
+                      <Link
+                        href="/orders"
+                        className="block px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
+                      >
+                        주문 내역
+                      </Link>
                       {user.role === 'ADMIN' && (
                         <Link
                           href="/admin"
