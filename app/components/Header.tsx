@@ -10,6 +10,8 @@ export default function Header() {
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const updateAuth = () => {
     const auth = getAuth();
@@ -55,9 +57,42 @@ export default function Header() {
   const handleLogout = () => {
     clearAuth();
     setUser(null);
+    setIsUserMenuOpen(false);
+    setIsMobileMenuOpen(false);
     router.push('/');
     router.refresh();
   };
+
+  const toggleUserMenu = () => {
+    setIsUserMenuOpen(!isUserMenuOpen);
+  };
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
+
+  // 외부 클릭 시 메뉴 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.user-menu-container') && !target.closest('.mobile-menu-container')) {
+        setIsUserMenuOpen(false);
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    if (isUserMenuOpen || isMobileMenuOpen) {
+      document.addEventListener('click', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [isUserMenuOpen, isMobileMenuOpen]);
 
   return (
     <header className="sticky top-0 z-50 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 shadow-sm">
@@ -114,7 +149,7 @@ export default function Header() {
           </nav>
 
           {/* 우측 아이콘들 */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 md:space-x-4">
             {/* 검색 아이콘 */}
             <button className="p-2 text-zinc-700 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
               <svg
@@ -156,8 +191,11 @@ export default function Header() {
             {mounted && (
               <>
                 {user ? (
-                  <div className="relative group">
-                    <button className="flex items-center space-x-2 p-2 text-zinc-700 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                  <div className="relative user-menu-container">
+                    <button 
+                      onClick={toggleUserMenu}
+                      className="flex items-center space-x-2 p-2 text-zinc-700 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                    >
                       <svg
                         className="w-5 h-5"
                         fill="none"
@@ -173,36 +211,46 @@ export default function Header() {
                       </svg>
                       <span className="hidden md:inline text-sm font-medium">{user.name}</span>
                     </button>
-                    <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-zinc-800 rounded-md shadow-lg py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 border border-zinc-200 dark:border-zinc-700 z-50">
-                      <div className="px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700">
-                        <div className="font-medium">{user.name}</div>
-                        <div className="text-xs text-zinc-500 dark:text-zinc-400">{user.email}</div>
-                        {user.role === 'ADMIN' && (
-                          <div className="mt-1">
-                            <span className="inline-block px-2 py-0.5 text-xs font-semibold bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded">
-                              관리자
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                      {user.role === 'ADMIN' && (
+                    {isUserMenuOpen && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-zinc-800 rounded-md shadow-lg py-1 border border-zinc-200 dark:border-zinc-700 z-50">
+                        <div className="px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-700">
+                          <div className="font-medium">{user.name}</div>
+                          <div className="text-xs text-zinc-500 dark:text-zinc-400">{user.email}</div>
+                          {user.role === 'ADMIN' && (
+                            <div className="mt-1">
+                              <span className="inline-block px-2 py-0.5 text-xs font-semibold bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded">
+                                관리자
+                              </span>
+                            </div>
+                          )}
+                        </div>
                         <Link
-                          href="/admin"
+                          href="/orders"
                           className="block px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
+                          onClick={() => setIsUserMenuOpen(false)}
                         >
-                          관리자 페이지
+                          주문 내역
                         </Link>
-                      )}
-                      <button
-                        onClick={handleLogout}
-                        className="w-full text-left px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
-                      >
-                        로그아웃
-                      </button>
-                    </div>
+                        {user.role === 'ADMIN' && (
+                          <Link
+                            href="/admin"
+                            className="block px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
+                            onClick={() => setIsUserMenuOpen(false)}
+                          >
+                            관리자 페이지
+                          </Link>
+                        )}
+                        <button
+                          onClick={handleLogout}
+                          className="w-full text-left px-4 py-2 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
+                        >
+                          로그아웃
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ) : (
-                  <div className="flex items-center space-x-2">
+                  <div className="hidden md:flex items-center space-x-2">
                     <Link
                       href="/login"
                       className="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
@@ -219,8 +267,119 @@ export default function Header() {
                 )}
               </>
             )}
+
+            {/* 모바일 햄버거 메뉴 버튼 */}
+            <button 
+              onClick={toggleMobileMenu}
+              className="md:hidden p-2 text-zinc-700 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors mobile-menu-container"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                {isMobileMenuOpen ? (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                ) : (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
+                )}
+              </svg>
+            </button>
           </div>
         </div>
+
+        {/* 모바일 메뉴 */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden mobile-menu-container border-t border-zinc-200 dark:border-zinc-800">
+            <nav className="py-4 space-y-2">
+              <Link
+                href="/"
+                onClick={closeMobileMenu}
+                className="block px-4 py-2 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+              >
+                홈
+              </Link>
+              <Link
+                href="/products"
+                onClick={closeMobileMenu}
+                className="block px-4 py-2 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+              >
+                상품
+              </Link>
+              {user && user.role === 'ADMIN' && (
+                <Link
+                  href="/admin"
+                  onClick={closeMobileMenu}
+                  className="block px-4 py-2 text-purple-600 dark:text-purple-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors font-medium"
+                >
+                  <div className="flex items-center space-x-2">
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                      />
+                    </svg>
+                    <span>관리자</span>
+                  </div>
+                </Link>
+              )}
+              {user && (
+                <Link
+                  href="/orders"
+                  onClick={closeMobileMenu}
+                  className="block px-4 py-2 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                >
+                  주문 내역
+                </Link>
+              )}
+              <Link
+                href="/about"
+                onClick={closeMobileMenu}
+                className="block px-4 py-2 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+              >
+                소개
+              </Link>
+              
+              {/* 로그인/회원가입 버튼 (모바일에서만 표시) */}
+              {mounted && !user && (
+                <div className="px-4 pt-4 pb-2 space-y-2 border-t border-zinc-200 dark:border-zinc-800">
+                  <Link
+                    href="/login"
+                    onClick={closeMobileMenu}
+                    className="block w-full text-center px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-600 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-md transition-colors"
+                  >
+                    로그인
+                  </Link>
+                  <Link
+                    href="/signup"
+                    onClick={closeMobileMenu}
+                    className="block w-full text-center px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
+                  >
+                    회원가입
+                  </Link>
+                </div>
+              )}
+            </nav>
+          </div>
+        )}
       </div>
     </header>
   );

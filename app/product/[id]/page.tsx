@@ -1,6 +1,6 @@
-import Link from "next/link";
-import Image from "next/image";
 import type { Metadata } from "next";
+import Image from "next/image";
+import Link from "next/link";
 
 interface Product {
   id: number;
@@ -140,7 +140,7 @@ export default async function ProductPage({
           <div className="md:flex">
             {/* 상품 이미지 */}
             <div className="md:w-1/2 bg-gradient-to-br from-zinc-100 to-zinc-200 dark:from-zinc-800 dark:to-zinc-900">
-              <div className="aspect-square flex items-center justify-center p-8">
+              <div className="aspect-square relative flex items-center justify-center p-8">
                 {product.imageUrl ? (
                   <Image
                     src={product.imageUrl}
