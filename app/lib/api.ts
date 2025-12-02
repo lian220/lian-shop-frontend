@@ -37,10 +37,23 @@ export function getFetchOptions(options: RequestInit = {}): RequestInit {
  */
 export async function handleApiResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ 
-      message: `API 요청 실패: ${response.status} ${response.statusText}` 
-    }));
-    throw new Error(error.message || `API 요청 실패: ${response.status}`);
+    let errorMessage = `API 요청 실패: ${response.status} ${response.statusText}`;
+    
+    try {
+      const errorData = await response.json();
+      // 백엔드에서 오는 에러 메시지 형식에 맞춰 처리
+      if (errorData.message) {
+        errorMessage = errorData.message;
+      } else if (errorData.error) {
+        errorMessage = errorData.error;
+      } else if (typeof errorData === 'string') {
+        errorMessage = errorData;
+      }
+    } catch {
+      // JSON 파싱 실패 시 기본 메시지 사용
+    }
+    
+    throw new Error(errorMessage);
   }
   return response.json();
 }

@@ -24,9 +24,7 @@ export interface SignupRequest {
   role?: string;
 }
 
-import { getApiUrl } from './api';
-
-import { getFetchOptions, handleApiResponse } from './api';
+import { getApiUrl, getFetchOptions, handleApiResponse } from './api';
 
 export async function login(credentials: LoginRequest): Promise<AuthResponse> {
   const apiUrl = getApiUrl();

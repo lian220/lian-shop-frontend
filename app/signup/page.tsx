@@ -49,10 +49,14 @@ export default function SignupPage() {
         role: 'CUSTOMER',
       });
       saveAuth(response);
-      // 페이지 새로고침하여 Header 상태 업데이트
-      window.location.href = '/';
+      // 이벤트가 전파될 시간을 주고 페이지 이동
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 100);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '회원가입에 실패했습니다.');
+      const errorMessage = err instanceof Error ? err.message : '회원가입에 실패했습니다.';
+      setError(errorMessage);
+      console.error('Signup error:', err);
     } finally {
       setLoading(false);
     }
