@@ -24,48 +24,33 @@ export interface SignupRequest {
   role?: string;
 }
 
-const getApiUrl = () => {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
-  return baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
-};
+import { getApiUrl } from './api';
+
+import { getFetchOptions, handleApiResponse } from './api';
 
 export async function login(credentials: LoginRequest): Promise<AuthResponse> {
   const apiUrl = getApiUrl();
   const response = await fetch(`${apiUrl}/auth/login`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    ...getFetchOptions(),
     body: JSON.stringify(credentials),
   });
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: '로그인에 실패했습니다.' }));
-    throw new Error(error.message || '로그인에 실패했습니다.');
-  }
-
-  return response.json();
+  return handleApiResponse<AuthResponse>(response);
 }
 
 export async function signup(data: SignupRequest): Promise<AuthResponse> {
   const apiUrl = getApiUrl();
   const response = await fetch(`${apiUrl}/auth/signup`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    ...getFetchOptions(),
     body: JSON.stringify({
       ...data,
       role: data.role || 'CUSTOMER',
     }),
   });
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: '회원가입에 실패했습니다.' }));
-    throw new Error(error.message || '회원가입에 실패했습니다.');
-  }
-
-  return response.json();
+  return handleApiResponse<AuthResponse>(response);
 }
 
 export function saveAuth(authResponse: AuthResponse) {

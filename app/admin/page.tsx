@@ -3,16 +3,9 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { Product } from '../types';
 import { getAuth, getAuthHeaders } from '../lib/auth';
-
-interface Product {
-  id: number;
-  name: string;
-  description: string | null;
-  price: number | string;
-  stockQuantity: number;
-  imageUrl: string | null;
-}
+import { getApiUrl, getFetchOptions } from '../lib/api';
 
 interface Order {
   id: number;
@@ -29,11 +22,6 @@ interface OrderItem {
   quantity: number;
   price: number;
 }
-
-const getApiUrl = () => {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
-  return baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
-};
 
 export default function AdminPage() {
   const router = useRouter();
@@ -69,7 +57,7 @@ export default function AdminPage() {
       }
       
       const headers: HeadersInit = {
-        'Content-Type': 'application/json',
+        ...getFetchOptions().headers as HeadersInit,
         'Authorization': `Bearer ${auth.token}`,
       };
       
@@ -225,9 +213,14 @@ export default function AdminPage() {
                                 
                                 try {
                                   const apiUrl = getApiUrl();
+                                  const headers = {
+                                    ...getFetchOptions().headers as HeadersInit,
+                                    ...getAuthHeaders(),
+                                  };
+                                  
                                   const response = await fetch(`${apiUrl}/admin/products/${product.id}`, {
                                     method: 'DELETE',
-                                    headers: getAuthHeaders(),
+                                    headers,
                                   });
                                   
                                   if (response.ok) {

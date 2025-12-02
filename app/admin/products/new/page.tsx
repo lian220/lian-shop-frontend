@@ -4,11 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { getAuth, getAuthHeaders } from '../../../lib/auth';
-
-const getApiUrl = () => {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
-  return baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
-};
+import { getApiUrl, getFetchOptions, handleApiResponse } from '../../../lib/api';
 
 export default function NewProductPage() {
   const router = useRouter();
@@ -43,9 +39,14 @@ export default function NewProductPage() {
 
     try {
       const apiUrl = getApiUrl();
+      const headers = {
+        ...getFetchOptions().headers as HeadersInit,
+        ...getAuthHeaders(),
+      };
+      
       const response = await fetch(`${apiUrl}/admin/products`, {
         method: 'POST',
-        headers: getAuthHeaders(),
+        headers,
         body: JSON.stringify({
           name: formData.name,
           description: formData.description || null,
@@ -60,10 +61,7 @@ export default function NewProductPage() {
         return;
       }
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: '상품 추가에 실패했습니다.' }));
-        throw new Error(errorData.message || '상품 추가에 실패했습니다.');
-      }
+      await handleApiResponse(response);
 
       // 성공 시 관리자 페이지로 이동
       router.push('/admin');

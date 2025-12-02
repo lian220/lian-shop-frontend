@@ -3,21 +3,9 @@
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { Product } from '../../../../types';
 import { getAuth, getAuthHeaders } from '../../../../lib/auth';
-
-interface Product {
-  id: number;
-  name: string;
-  description: string | null;
-  price: number | string;
-  stockQuantity: number;
-  imageUrl: string | null;
-}
-
-const getApiUrl = () => {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
-  return baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
-};
+import { getApiUrl, getFetchOptions, handleApiResponse } from '../../../../lib/api';
 
 export default function EditProductPage() {
   const router = useRouter();
@@ -48,7 +36,9 @@ export default function EditProductPage() {
   const loadProduct = async () => {
     try {
       const apiUrl = getApiUrl();
-      const response = await fetch(`${apiUrl}/products/${productId}`);
+      const response = await fetch(`${apiUrl}/products/${productId}`, {
+        ...getFetchOptions(),
+      });
       
       if (!response.ok) {
         throw new Error('상품을 불러올 수 없습니다.');
@@ -91,9 +81,14 @@ export default function EditProductPage() {
 
     try {
       const apiUrl = getApiUrl();
+      const headers = {
+        ...getFetchOptions().headers as HeadersInit,
+        ...getAuthHeaders(),
+      };
+      
       const response = await fetch(`${apiUrl}/admin/products/${productId}`, {
         method: 'PUT',
-        headers: getAuthHeaders(),
+        headers,
         body: JSON.stringify({
           name: formData.name,
           description: formData.description || null,
@@ -108,10 +103,7 @@ export default function EditProductPage() {
         return;
       }
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: '상품 수정에 실패했습니다.' }));
-        throw new Error(errorData.message || '상품 수정에 실패했습니다.');
-      }
+      await handleApiResponse(response);
 
       // 성공 시 관리자 페이지로 이동
       router.push('/admin');
