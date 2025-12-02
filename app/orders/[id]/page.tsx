@@ -68,19 +68,28 @@ export default function OrderDetailPage() {
         });
 
         if (!response.ok) {
-          throw new Error('주문 정보를 불러오는데 실패했습니다.');
+          if (response.status === 404) {
+            setError('주문을 찾을 수 없습니다.');
+          } else {
+            setError('백엔드 서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.');
+          }
+          setLoading(false);
+          return;
         }
 
         const data = await response.json();
 
         // 본인의 주문인지 확인
         if (data.userId !== auth.user.id) {
-          throw new Error('접근 권한이 없습니다.');
+          setError('접근 권한이 없습니다.');
+          setLoading(false);
+          return;
         }
 
         setOrder(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
+        console.error('주문 상세 로드 실패:', err);
+        setError('백엔드 서버에 연결할 수 없습니다. 백엔드 서버가 실행 중인지 확인해주세요.');
       } finally {
         setLoading(false);
       }

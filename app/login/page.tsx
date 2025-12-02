@@ -23,7 +23,14 @@ export default function LoginPage() {
       // 페이지 새로고침하여 Header 상태 업데이트
       window.location.href = '/';
     } catch (err) {
-      setError(err instanceof Error ? err.message : '로그인에 실패했습니다.');
+      const errorMessage = err instanceof Error ? err.message : '로그인에 실패했습니다.';
+      
+      // 네트워크 에러인 경우 더 명확한 메시지 표시
+      if (errorMessage.includes('Failed to fetch') || errorMessage.includes('fetch')) {
+        setError('백엔드 서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.');
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setLoading(false);
     }

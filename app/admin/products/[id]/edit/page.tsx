@@ -51,7 +51,13 @@ export default function EditProductPage() {
       const response = await fetch(`${apiUrl}/products/${productId}`);
       
       if (!response.ok) {
-        throw new Error('상품을 불러올 수 없습니다.');
+        if (response.status === 404) {
+          setError('상품을 찾을 수 없습니다.');
+        } else {
+          setError('백엔드 서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.');
+        }
+        setFetching(false);
+        return;
       }
       
       const data = await response.json();
@@ -64,7 +70,8 @@ export default function EditProductPage() {
         imageUrl: data.imageUrl || '',
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : '상품을 불러올 수 없습니다.');
+      console.error('상품 로드 실패:', err);
+      setError('백엔드 서버에 연결할 수 없습니다. 백엔드 서버가 실행 중인지 확인해주세요.');
     } finally {
       setFetching(false);
     }
@@ -116,7 +123,14 @@ export default function EditProductPage() {
       // 성공 시 관리자 페이지로 이동
       router.push('/admin');
     } catch (err) {
-      setError(err instanceof Error ? err.message : '상품 수정에 실패했습니다.');
+      const errorMessage = err instanceof Error ? err.message : '상품 수정에 실패했습니다.';
+      
+      // 네트워크 에러인 경우 더 명확한 메시지 표시
+      if (errorMessage.includes('Failed to fetch') || errorMessage.includes('fetch')) {
+        setError('백엔드 서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.');
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setLoading(false);
     }

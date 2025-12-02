@@ -69,13 +69,21 @@ export default function OrdersPage() {
         );
 
         if (!response.ok) {
-          throw new Error('주문 목록을 불러오는데 실패했습니다.');
+          // 백엔드 연결 실패 시 빈 배열로 설정하고 에러 메시지 표시
+          console.warn('주문 목록을 불러오는데 실패했습니다:', response.status);
+          setOrders([]);
+          setError('백엔드 서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.');
+          setLoading(false);
+          return;
         }
 
         const data = await response.json();
-        setOrders(data);
+        setOrders(Array.isArray(data) ? data : []);
       } catch (err) {
-        setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.');
+        // 네트워크 에러 시 빈 배열로 설정
+        console.error('주문 목록 로드 실패:', err);
+        setOrders([]);
+        setError('백엔드 서버에 연결할 수 없습니다. 백엔드 서버가 실행 중인지 확인해주세요.');
       } finally {
         setLoading(false);
       }
@@ -103,17 +111,7 @@ export default function OrdersPage() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
-        <div className="container mx-auto px-4 py-8">
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-            <p className="text-red-800 dark:text-red-300">{error}</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // 에러가 있어도 화면은 표시하고 에러 메시지만 상단에 표시
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
@@ -126,6 +124,18 @@ export default function OrdersPage() {
             주문하신 상품의 내역을 확인하실 수 있습니다.
           </p>
         </div>
+
+        {/* 에러 메시지 표시 */}
+        {error && (
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-6">
+            <div className="flex items-start">
+              <svg className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <p className="text-yellow-800 dark:text-yellow-300">{error}</p>
+            </div>
+          </div>
+        )}
 
         {orders.length === 0 ? (
           <div className="bg-white dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700 p-12 text-center">

@@ -19,6 +19,14 @@ export function getClientApiUrl(): string {
 }
 
 /**
+ * 범용 API URL 반환 (클라이언트/서버 자동 감지)
+ */
+export function getApiUrl(): string {
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+  return baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
+}
+
+/**
  * fetch 옵션을 반환 (헤더 등)
  */
 export function getFetchOptions(token?: string): RequestInit {

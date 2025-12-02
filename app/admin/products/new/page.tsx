@@ -68,7 +68,14 @@ export default function NewProductPage() {
       // 성공 시 관리자 페이지로 이동
       router.push('/admin');
     } catch (err) {
-      setError(err instanceof Error ? err.message : '상품 추가에 실패했습니다.');
+      const errorMessage = err instanceof Error ? err.message : '상품 추가에 실패했습니다.';
+      
+      // 네트워크 에러인 경우 더 명확한 메시지 표시
+      if (errorMessage.includes('Failed to fetch') || errorMessage.includes('fetch')) {
+        setError('백엔드 서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.');
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setLoading(false);
     }

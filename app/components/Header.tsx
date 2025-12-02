@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { clearAuth, getAuth, User } from '../lib/auth';
+import { getCart } from '../lib/cart';
 
 export default function Header() {
   const router = useRouter();
@@ -12,6 +13,7 @@ export default function Header() {
   const [mounted, setMounted] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
 
   const updateAuth = () => {
     const auth = getAuth();
@@ -22,14 +24,24 @@ export default function Header() {
     }
   };
 
+  const updateCartCount = () => {
+    const cart = getCart();
+    const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+    setCartCount(totalCount);
+  };
+
   useEffect(() => {
     setMounted(true);
     updateAuth();
+    updateCartCount();
 
     // storage 이벤트 리스너 (다른 탭에서 로그인/로그아웃 시)
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'token' || e.key === 'user') {
         updateAuth();
+      }
+      if (e.key === 'cart') {
+        updateCartCount();
       }
     };
 
@@ -38,12 +50,19 @@ export default function Header() {
       updateAuth();
     };
 
+    // 장바구니 변경 이벤트 리스너
+    const handleCartChange = () => {
+      updateCartCount();
+    };
+
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('auth-change', handleAuthChange);
+    window.addEventListener('cart-change', handleCartChange);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('auth-change', handleAuthChange);
+      window.removeEventListener('cart-change', handleCartChange);
     };
   }, []);
 
@@ -168,7 +187,7 @@ export default function Header() {
             </button>
 
             {/* 장바구니 아이콘 */}
-            <button className="relative p-2 text-zinc-700 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+            <Link href="/cart" className="relative p-2 text-zinc-700 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
               <svg
                 className="w-5 h-5"
                 fill="none"
@@ -182,10 +201,12 @@ export default function Header() {
                   d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
                 />
               </svg>
-              <span className="absolute top-0 right-0 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                0
-              </span>
-            </button>
+              {cartCount > 0 && (
+                <span className="absolute top-0 right-0 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {cartCount > 99 ? '99+' : cartCount}
+                </span>
+              )}
+            </Link>
 
             {/* 사용자 메뉴 */}
             {mounted && (
