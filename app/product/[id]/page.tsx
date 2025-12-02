@@ -15,20 +15,12 @@ async function getProduct(id: string): Promise<Product | null> {
     });
 
     if (!res.ok) {
-      console.error(`[Server] Failed to fetch product: ${res.status} ${res.statusText}`);
-      console.error(`[Server] URL: ${fullUrl}`);
       return null;
     }
 
     const data = await res.json();
     return data;
   } catch (error) {
-    console.error("[Server] Error fetching product:", error);
-    console.error(`[Server] URL: ${fullUrl}`);
-    console.error(`[Server] Product ID: ${id}`);
-    if (error instanceof Error) {
-      console.error(`[Server] Error message: ${error.message}`);
-    }
     return null;
   }
 }
@@ -45,7 +37,6 @@ export async function generateStaticParams() {
     });
 
     if (!res.ok) {
-      console.error(`Failed to fetch products list: ${res.status}`);
       return [];
     }
 
@@ -54,7 +45,6 @@ export async function generateStaticParams() {
       id: product.id.toString(),
     }));
   } catch (error) {
-    console.error("Error generating static params:", error);
     return [];
   }
 }

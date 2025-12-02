@@ -13,14 +13,12 @@ async function getProducts(): Promise<Product[]> {
     });
 
     if (!res.ok) {
-      console.error(`[Server] Failed to fetch products: ${res.status}`);
       return [];
     }
 
     const data = await res.json();
     return Array.isArray(data) ? data : [];
   } catch (error) {
-    console.error("[Server] Error fetching products:", error);
     return [];
   }
 }

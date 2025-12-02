@@ -48,7 +48,6 @@ export default function ProductDetailLoader({ productId: propProductId, initialP
           setProduct(data);
           setLoading(false);
         } catch (err) {
-          console.error('Error fetching product:', err);
           setError('상품을 불러오는 중 오류가 발생했습니다.');
           setLoading(false);
         }

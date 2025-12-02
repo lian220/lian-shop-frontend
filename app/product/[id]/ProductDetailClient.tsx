@@ -79,7 +79,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
       imageUrl: product.imageUrl,
     });
 
-    router.push('/cart?checkout=true');
+    router.push('/checkout');
   };
 
   return (

@@ -81,7 +81,7 @@ export default function AdminPage() {
       // TODO: 주문 목록 API 추가 시 구현
       setOrders([]);
     } catch (error) {
-      console.error('데이터 로드 실패:', error);
+      // 데이터 로드 실패 시 무시
     } finally {
       setLoading(false);
     }
@@ -230,7 +230,6 @@ export default function AdminPage() {
                                     alert('상품 삭제에 실패했습니다.');
                                   }
                                 } catch (error) {
-                                  console.error('삭제 실패:', error);
                                   alert('상품 삭제에 실패했습니다.');
                                 }
                               }}

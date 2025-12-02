@@ -56,7 +56,6 @@ export default function SignupPage() {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : '회원가입에 실패했습니다.';
       setError(errorMessage);
-      console.error('Signup error:', err);
     } finally {
       setLoading(false);
     }
