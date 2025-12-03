@@ -1,17 +1,9 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Script from 'next/script';
 import { getCart, getCartTotal, clearCart, updateCartItemQuantity, CartItem } from '../lib/cart';
 import { getAuth } from '../lib/auth';
-
-// 토스페이먼츠 SDK 타입 정의
-declare global {
-  interface Window {
-    TossPayments: any;
-  }
-}
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -20,11 +12,6 @@ export default function CheckoutPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isPaymentReady, setIsPaymentReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const widgetsRef = useRef<any>(null);
-  const tossPaymentsRef = useRef<any>(null);
-
-  // 클라이언트 키 (환경 변수에서 가져오기)
-  const clientKey = process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY;
 
   useEffect(() => {
     // 인증 확인
@@ -43,116 +30,103 @@ export default function CheckoutPage() {
       return;
     }
 
-    // 환경 변수 확인 (경고만 표시, 장바구니는 표시)
-    if (!clientKey) {
-      setError('토스페이먼츠 클라이언트 키가 설정되지 않았습니다. 환경 변수 NEXT_PUBLIC_TOSS_CLIENT_KEY를 확인해주세요.');
-    } else {
-      // 클라이언트 키 형식 확인 (결제위젯 연동 키는 test_ck_ 또는 live_ck_로 시작)
-      if (!clientKey.startsWith('test_ck_') && !clientKey.startsWith('live_ck_')) {
-        setError('잘못된 클라이언트 키 형식입니다. 결제위젯 연동 키를 사용해야 합니다. (개발자센터 > API 키 > 결제위젯 연동 키)');
-      }
-    }
-
     setCart(cartItems);
     const total = getCartTotal();
     setTotalAmount(total);
     setIsLoading(false);
-  }, [router, clientKey]);
+  }, [router]);
 
-  // 토스페이먼츠 SDK 로드 후 초기화
-  const initializeTossPayments = async () => {
-    if (!clientKey) {
-      setError('토스페이먼츠 클라이언트 키가 설정되지 않았습니다.');
-      return;
-    }
-
-    if (!window.TossPayments) {
-      setError('토스페이먼츠 SDK를 불러올 수 없습니다.');
-      return;
-    }
-
-    try {
-      const auth = getAuth();
-      if (!auth) {
-        router.push('/login?redirect=/checkout');
-        return;
-      }
-
-      // 고유한 customerKey 생성 (사용자 ID 기반)
-      const customerKey = `customer_${auth.user.id}_${Date.now()}`;
-
-      // 토스페이먼츠 초기화
-      tossPaymentsRef.current = window.TossPayments(clientKey);
-
-      // 결제위젯 인스턴스 생성 (비회원 결제)
-      widgetsRef.current = tossPaymentsRef.current.widgets({
-        customerKey: window.TossPayments.ANONYMOUS,
-      });
-
-      // 결제 금액 설정
-      await widgetsRef.current.setAmount({
-        currency: 'KRW',
-        value: totalAmount,
-      });
-
-      // 결제 UI 렌더링
-      await widgetsRef.current.renderPaymentMethods({
-        selector: '#payment-method',
-        variantKey: 'DEFAULT',
-      });
-
-      // 약관 UI 렌더링
-      await widgetsRef.current.renderAgreement({
-        selector: '#agreement',
-        variantKey: 'AGREEMENT',
-      });
-
+  // 결제 시스템 준비
+  useEffect(() => {
+    if (cart.length > 0) {
       setIsPaymentReady(true);
-    } catch (err: any) {
-      let errorMessage = err.message || '알 수 없는 오류가 발생했습니다.';
-      
-      // 결제위젯 연동 키 관련 에러인 경우 더 명확한 메시지 제공
-      if (errorMessage.includes('결제위젯 연동 키') || errorMessage.includes('API 개별 연동 키')) {
-        errorMessage = '결제위젯 연동 키를 사용해야 합니다. 토스페이먼츠 개발자센터(https://developers.tosspayments.com) > API 키 메뉴에서 "결제위젯 연동 키"를 확인하고 환경 변수에 설정해주세요. (현재 "API 개별 연동 키"를 사용 중일 수 있습니다)';
-      }
-      
-      setError(`결제 시스템 초기화에 실패했습니다: ${errorMessage}`);
     }
-  };
+  }, [cart]);
 
   // 결제 요청
   const handlePayment = async () => {
-    if (!widgetsRef.current) {
+    if (!isPaymentReady) {
       setError('결제 시스템이 준비되지 않았습니다.');
       return;
     }
 
+    setIsLoading(true);
+    setError(null);
+
     try {
       const auth = getAuth();
       if (!auth) {
         router.push('/login?redirect=/checkout');
         return;
       }
-
-      // 고유한 주문번호 생성
-      const orderId = `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
       // 주문 상품명 생성
       const orderName = cart.length === 1
         ? cart[0].name
         : `${cart[0].name} 외 ${cart.length - 1}건`;
 
-      // 결제 요청
-      await widgetsRef.current.requestPayment({
-        orderId,
-        orderName,
-        successUrl: `${window.location.origin}/checkout/success`,
-        failUrl: `${window.location.origin}/checkout/fail`,
-        customerEmail: auth.user.email,
-        customerName: auth.user.name,
+      // 1. 서버에 주문 생성 요청
+      const orderResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${auth.token}`
+        },
+        body: JSON.stringify({
+          userId: auth.user.id,
+          items: cart.map(item => ({
+            productId: item.productId,
+            quantity: item.quantity
+          })),
+          shippingAddress: '서울시 강남구', // TODO: 배송지 입력 폼 추가
+          customerName: auth.user.name || '고객',
+          customerEmail: auth.user.email || '',
+          customerPhone: '010-0000-0000' // TODO: 전화번호 입력 폼 추가
+        })
       });
+
+      if (!orderResponse.ok) {
+        const errorText = await orderResponse.text();
+        console.error('주문 생성 실패:', {
+          status: orderResponse.status,
+          statusText: orderResponse.statusText,
+          error: errorText
+        });
+        throw new Error(`주문 생성에 실패했습니다 (${orderResponse.status}): ${errorText}`);
+      }
+
+      const orderData = await orderResponse.json();
+      const orderId = orderData.orderNumber;
+
+      // 2. 서버에 결제 준비 요청 (네이버페이)
+      const baseUrl = window.location.origin;
+      const prepareResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/payments/prepare`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${auth.token}`
+        },
+        body: JSON.stringify({
+          orderId: orderId,
+          amount: Math.round(totalAmount * 100) / 100, // 소수점 2자리까지 반올림
+          orderName: orderName,
+          successUrl: `${baseUrl}/checkout/success`,
+          failUrl: `${baseUrl}/checkout/fail`
+        })
+      });
+
+      if (!prepareResponse.ok) {
+        throw new Error('결제 준비에 실패했습니다');
+      }
+
+      const prepareData = await prepareResponse.json();
+
+      // 3. 네이버페이 결제 URL로 리다이렉트
+      window.location.href = prepareData.paymentUrl;
+
     } catch (err: any) {
       setError(`결제 요청에 실패했습니다: ${err.message}`);
+      setIsLoading(false);
     }
   };
 
@@ -178,16 +152,6 @@ export default function CheckoutPage() {
     const updatedCart = getCart();
     const total = updatedCart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     setTotalAmount(total);
-    
-    // 토스페이먼츠 금액 업데이트
-    if (widgetsRef.current && total > 0) {
-      widgetsRef.current.setAmount({
-        currency: 'KRW',
-        value: total,
-      }).catch(() => {
-        // 금액 업데이트 실패 시 무시
-      });
-    }
   };
 
   // 수량 증가
@@ -221,13 +185,6 @@ export default function CheckoutPage() {
 
   return (
     <>
-      {/* 토스페이먼츠 SDK 스크립트 */}
-      <Script
-        src="https://js.tosspayments.com/v2/standard"
-        onLoad={initializeTossPayments}
-        strategy="lazyOnload"
-      />
-
       <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white">
         <div className="container mx-auto px-4 py-12 max-w-6xl">
           <h1 className="text-3xl font-bold mb-8 tracking-widest uppercase">
@@ -297,17 +254,21 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              {/* 결제 UI */}
+              {/* 결제 수단 안내 */}
               <div className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 p-6">
                 <h2 className="text-xl font-bold mb-4 tracking-widest uppercase">
                   결제 수단
                 </h2>
-                <div id="payment-method"></div>
-              </div>
-
-              {/* 약관 UI */}
-              <div className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 p-6">
-                <div id="agreement"></div>
+                <div className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded">
+                  <svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  <div>
+                    <p className="font-semibold text-green-800 dark:text-green-200">네이버페이</p>
+                    <p className="text-sm text-green-600 dark:text-green-400">간편하고 안전한 결제</p>
+                  </div>
+                </div>
+                <div id="naver-pay-button" className="mt-4"></div>
               </div>
             </div>
 
@@ -346,14 +307,14 @@ export default function CheckoutPage() {
 
                 <button
                   onClick={handlePayment}
-                  disabled={!isPaymentReady || !clientKey || cart.length === 0}
-                  className="w-full py-3 px-6 bg-black dark:bg-white text-white dark:text-black font-bold tracking-widest uppercase rounded hover:bg-zinc-800 dark:hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  disabled={isLoading || !isPaymentReady || cart.length === 0}
+                  className="w-full py-3 px-6 bg-[#03C75A] hover:bg-[#02B350] text-white font-bold tracking-widest uppercase rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  {!clientKey 
-                    ? '클라이언트 키 필요' 
+                  {isLoading 
+                    ? '처리 중...' 
                     : !isPaymentReady 
                     ? '결제 준비 중...' 
-                    : '결제하기'}
+                    : '네이버페이로 결제하기'}
                 </button>
               </div>
             </div>
@@ -363,4 +324,3 @@ export default function CheckoutPage() {
     </>
   );
 }
-

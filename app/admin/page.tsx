@@ -93,9 +93,18 @@ export default function AdminPage() {
         setProducts([]);
       }
 
-      // 주문 목록은 아직 API가 없으므로 빈 배열로 설정
-      // TODO: 주문 목록 API 추가 시 구현
-      setOrders([]);
+      // 주문 목록 로드 (관리자 API 사용)
+      const ordersRes = await fetch(`${apiUrl}/admin/orders`, {
+        headers,
+      });
+      
+      if (ordersRes.ok) {
+        const ordersData = await ordersRes.json();
+        setOrders(Array.isArray(ordersData) ? ordersData : []);
+      } else {
+        console.warn('주문 목록 로드 실패:', ordersRes.status);
+        setOrders([]);
+      }
     } catch (error) {
       console.error('데이터 로드 실패:', error);
       // 백엔드 연결 실패 시 빈 배열로 설정
@@ -297,13 +306,53 @@ export default function AdminPage() {
             ) : orders.length === 0 ? (
               <div className="text-center py-12 bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800">
                 <p className="text-zinc-600 dark:text-zinc-400">주문이 없습니다.</p>
-                <p className="text-sm text-zinc-500 dark:text-zinc-500 mt-2">
-                  주문 목록 API가 구현되면 여기에 표시됩니다.
-                </p>
               </div>
             ) : (
-              <div className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800">
-                {/* 주문 목록 테이블 */}
+              <div className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 overflow-hidden">
+                <table className="min-w-full divide-y divide-zinc-200 dark:divide-zinc-700">
+                  <thead className="bg-zinc-50 dark:bg-zinc-800">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                        주문번호
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                        사용자 ID
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                        상태
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                        금액
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                        상품 수
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white dark:bg-zinc-900 divide-y divide-zinc-200 dark:divide-zinc-700">
+                    {orders.map((order) => (
+                      <tr key={order.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-50">
+                          #{order.id}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-50">
+                          {order.userId}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
+                            {order.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-50">
+                          ₩{order.totalAmount.toLocaleString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-900 dark:text-zinc-50">
+                          {order.items.length}개
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>
