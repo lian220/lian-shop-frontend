@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getCart, getCartTotal, clearCart, updateCartItemQuantity, CartItem } from '../lib/cart';
 import { getAuth } from '../lib/auth';
+import { getClientApiUrl } from '../lib/api';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -66,7 +67,8 @@ export default function CheckoutPage() {
         : `${cart[0].name} 외 ${cart.length - 1}건`;
 
       // 1. 서버에 주문 생성 요청
-      const orderResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders`, {
+      const apiUrl = getClientApiUrl();
+      const orderResponse = await fetch(`${apiUrl}/orders`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -100,7 +102,7 @@ export default function CheckoutPage() {
 
       // 2. 서버에 결제 준비 요청 (네이버페이)
       const baseUrl = window.location.origin;
-      const prepareResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/payments/prepare`, {
+      const prepareResponse = await fetch(`${apiUrl}/payments/prepare`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

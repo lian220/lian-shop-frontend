@@ -20,17 +20,24 @@ async function getProducts(): Promise<Product[]> {
 
   try {
     const res = await fetch(apiEndpoint, {
-      next: { revalidate: 60 }, // ISR: 60초마다 재검증
+      next: { 
+        revalidate: 300, // ISR: 5분마다 재검증 (더 긴 캐시)
+        tags: ['products'] // 캐시 태그로 수동 재검증 가능
+      },
       ...getFetchOptions(),
+      // 타임아웃 설정 추가
+      signal: AbortSignal.timeout(10000), // 10초 타임아웃
     });
 
     if (!res.ok) {
+      console.error(`Failed to fetch products: ${res.status}`);
       return [];
     }
 
     const data = await res.json();
     return Array.isArray(data) ? data : [];
   } catch (error) {
+    console.error('Error fetching products:', error);
     return [];
   }
 }

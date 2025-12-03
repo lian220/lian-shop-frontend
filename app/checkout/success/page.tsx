@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { clearCart } from '../../lib/cart';
+import { getClientApiUrl } from '../../lib/api';
 
 function CheckoutSuccessContent() {
   const router = useRouter();
@@ -33,7 +34,7 @@ function CheckoutSuccessContent() {
 
       try {
         // 서버에 결제 승인 요청
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
+        const apiUrl = getClientApiUrl();
         const response = await fetch(`${apiUrl}/payments/confirm/test`, {
           method: 'POST',
           headers: {

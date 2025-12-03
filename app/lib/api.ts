@@ -7,7 +7,8 @@
  */
 export function getServerApiUrl(): string {
   // 서버 사이드에서는 내부 네트워크 URL 사용
-  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+  return baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
 }
 
 /**
@@ -15,7 +16,8 @@ export function getServerApiUrl(): string {
  */
 export function getClientApiUrl(): string {
   // 클라이언트 사이드에서는 공개 URL 사용
-  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+  return baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
 }
 
 /**
