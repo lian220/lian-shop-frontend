@@ -1,0 +1,76 @@
+name: Keep Services Alive
+
+on:
+  schedule:
+    # 매 5분마다 실행 (UTC 기준)
+    # GitHub Actions의 스케줄은 최대 10분 정도 지연될 수 있음
+    - cron: '*/5 * * * *'
+  
+  # 수동으로 워크플로우 실행 가능
+  workflow_dispatch:
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Ping Frontend (프론트엔드 호출로 백엔드도 함께 깨우기)
+        env:
+          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
+        run: |
+          echo "🔥 Keep-Alive 시작..."
+          echo "📡 프론트엔드 URL: $FRONTEND_URL"
+          echo ""
+          
+          # 프론트엔드 메인 페이지 호출
+          echo "1️⃣ 메인 페이지 호출 중..."
+          START_TIME=$(date +%s)
+          
+          RESPONSE=$(curl -s -w "\n%{http_code}" "$FRONTEND_URL" || echo "000")
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          
+          END_TIME=$(date +%s)
+          ELAPSED_TIME=$((END_TIME - START_TIME))
+          
+          echo "   응답 코드: $HTTP_CODE"
+          echo "   응답 시간: ${ELAPSED_TIME}초"
+          
+          if [ "$HTTP_CODE" -eq "200" ]; then
+            echo "   ✅ 프론트엔드 응답 성공"
+          else
+            echo "   ⚠️ 프론트엔드 응답 실패 (HTTP $HTTP_CODE)"
+          fi
+          
+          echo ""
+          
+          # 상품 페이지도 호출 (백엔드 API 호출 보장)
+          echo "2️⃣ 상품 페이지 호출 중 (백엔드 API 트리거)..."
+          START_TIME=$(date +%s)
+          
+          PRODUCTS_URL="$FRONTEND_URL/products"
+          RESPONSE=$(curl -s -w "\n%{http_code}" "$PRODUCTS_URL" || echo "000")
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          
+          END_TIME=$(date +%s)
+          ELAPSED_TIME=$((END_TIME - START_TIME))
+          
+          echo "   응답 코드: $HTTP_CODE"
+          echo "   응답 시간: ${ELAPSED_TIME}초"
+          
+          if [ "$HTTP_CODE" -eq "200" ]; then
+            echo "   ✅ 상품 페이지 응답 성공 (백엔드도 깨어남)"
+          else
+            echo "   ⚠️ 상품 페이지 응답 실패 (HTTP $HTTP_CODE)"
+          fi
+          
+          echo ""
+          echo "🎉 Keep-Alive 완료!"
+          echo ""
+          echo "💡 프론트엔드가 백엔드 API를 호출하므로 둘 다 활성 상태 유지됩니다."
+      
+      - name: Notification on Failure
+        if: failure()
+        run: |
+          echo "⚠️ Keep-Alive 실패!"
+          echo "프론트엔드 URL을 확인해주세요: ${{ secrets.FRONTEND_URL }}"
+
