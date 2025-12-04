@@ -104,14 +104,14 @@ export default function CartPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white">
-      <div className="container mx-auto px-4 py-12 max-w-6xl">
-        <h1 className="text-3xl font-bold mb-8 tracking-widest uppercase">
+    <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white overflow-x-hidden">
+      <div className="container mx-auto px-4 py-6 md:py-12 max-w-6xl">
+        <h1 className="text-2xl md:text-3xl font-bold mb-6 md:mb-8 tracking-widest uppercase">
           장바구니
         </h1>
 
         {cart.length === 0 ? (
-          <div className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 p-12 text-center">
+          <div className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 p-8 md:p-12 text-center">
             <svg
               className="w-16 h-16 mx-auto mb-4 text-zinc-400 dark:text-zinc-600"
               fill="none"
@@ -136,36 +136,36 @@ export default function CartPage() {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
             {/* 장바구니 상품 목록 */}
             <div className="lg:col-span-2 space-y-4">
-              <div className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 p-6">
-                <h2 className="text-xl font-bold mb-4 tracking-widest uppercase">
+              <div className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 p-4 md:p-6">
+                <h2 className="text-lg md:text-xl font-bold mb-4 tracking-widest uppercase">
                   상품 목록
                 </h2>
                 <div className="space-y-4">
                   {cart.map((item) => (
                     <div
                       key={item.productId}
-                      className="flex items-center gap-4 pb-4 border-b border-zinc-200 dark:border-zinc-800 last:border-0"
+                      className="flex flex-col sm:flex-row items-start sm:items-center gap-3 md:gap-4 pb-4 border-b border-zinc-200 dark:border-zinc-800 last:border-0"
                     >
-                      <Link href={`/product/${item.productId}`}>
+                      <Link href={`/product/${item.productId}`} className="flex-shrink-0">
                         {item.imageUrl ? (
                           <img
                             src={item.imageUrl}
                             alt={item.name}
-                            className="w-24 h-24 object-cover rounded hover:opacity-80 transition-opacity"
+                            className="w-20 h-20 md:w-24 md:h-24 object-cover rounded hover:opacity-80 transition-opacity"
                           />
                         ) : (
-                          <div className="w-24 h-24 bg-zinc-100 dark:bg-zinc-800 rounded flex items-center justify-center">
+                          <div className="w-20 h-20 md:w-24 md:h-24 bg-zinc-100 dark:bg-zinc-800 rounded flex items-center justify-center">
                             <span className="text-xs text-zinc-400 uppercase">No Image</span>
                           </div>
                         )}
                       </Link>
-                      <div className="flex-1">
+                      <div className="flex-1 min-w-0 w-full">
                         <Link
                           href={`/product/${item.productId}`}
-                          className="block font-semibold mb-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                          className="block font-semibold mb-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors truncate"
                         >
                           {item.name}
                         </Link>
@@ -173,7 +173,7 @@ export default function CartPage() {
                           {formatPrice(item.price)}원
                         </p>
                         {/* 수량 조절 */}
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center justify-between sm:justify-start gap-3">
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => handleDecrease(item.productId)}
@@ -193,18 +193,18 @@ export default function CartPage() {
                               +
                             </button>
                           </div>
-                          <button
-                            onClick={() => handleRemove(item.productId)}
-                            className="text-sm text-red-600 dark:text-red-400 hover:underline"
-                          >
-                            삭제
-                          </button>
+                          <div className="flex items-center gap-3">
+                            <p className="font-bold text-base md:text-lg whitespace-nowrap">
+                              {formatPrice(item.price * item.quantity)}원
+                            </p>
+                            <button
+                              onClick={() => handleRemove(item.productId)}
+                              className="text-sm text-red-600 dark:text-red-400 hover:underline whitespace-nowrap"
+                            >
+                              삭제
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold text-lg">
-                          {formatPrice(item.price * item.quantity)}원
-                        </p>
                       </div>
                     </div>
                   ))}
@@ -214,8 +214,8 @@ export default function CartPage() {
 
             {/* 주문 요약 */}
             <div className="lg:col-span-1">
-              <div className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 p-6 sticky top-4">
-                <h2 className="text-xl font-bold mb-4 tracking-widest uppercase">
+              <div className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 p-4 md:p-6 lg:sticky lg:top-4">
+                <h2 className="text-lg md:text-xl font-bold mb-4 tracking-widest uppercase">
                   주문 요약
                 </h2>
                 <div className="space-y-4 mb-6">

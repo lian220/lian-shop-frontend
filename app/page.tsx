@@ -77,32 +77,32 @@ export default async function Home() {
         />
       )}
 
-      <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white">
+      <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white overflow-x-hidden">
         {/* Hero Section */}
-        <section className="container mx-auto px-4 pt-32 pb-16">
+        <section className="container mx-auto px-4 pt-16 md:pt-32 pb-8 md:pb-16">
           <div className="max-w-2xl">
-            <h1 className="text-6xl font-bold tracking-tighter mb-6 leading-tight">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tighter mb-6 leading-tight">
               LIAN<br />MINIMAL<br />LIFESTYLE.
             </h1>
-            <p className="text-lg text-zinc-500 max-w-md">
+            <p className="text-base md:text-lg text-zinc-500 max-w-md">
               리안(Lian)에서 프리미엄 상품을 만나보세요. 미니멀하고 세련된 디자인의 제품들을 큐레이션합니다.
             </p>
           </div>
         </section>
 
         {/* Product List */}
-        <section className="container mx-auto px-4 py-16">
-          <h2 className="text-2xl font-bold mb-8 tracking-tight">
+        <section className="container mx-auto px-4 py-8 md:py-16">
+          <h2 className="text-xl md:text-2xl font-bold mb-6 md:mb-8 tracking-tight">
             리안샵 추천 상품
           </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-12">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-3 md:gap-x-4 gap-y-8 md:gap-y-12">
             {products.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
 
           {products.length === 0 && (
-            <div className="text-center py-32 text-zinc-400 text-sm uppercase tracking-widest">
+            <div className="text-center py-16 md:py-32 text-zinc-400 text-sm uppercase tracking-widest">
               No products available
             </div>
           )}

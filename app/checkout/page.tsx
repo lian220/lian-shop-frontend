@@ -187,18 +187,18 @@ export default function CheckoutPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white">
-        <div className="container mx-auto px-4 py-12 max-w-6xl">
-          <h1 className="text-3xl font-bold mb-8 tracking-widest uppercase">
+      <div className="min-h-screen bg-white dark:bg-black text-black dark:text-white overflow-x-hidden">
+        <div className="container mx-auto px-4 py-6 md:py-12 max-w-6xl">
+          <h1 className="text-2xl md:text-3xl font-bold mb-6 md:mb-8 tracking-widest uppercase">
             주문서
           </h1>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
             {/* 주문 정보 */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="lg:col-span-2 space-y-4 md:space-y-6">
               {/* 주문 상품 목록 */}
-              <div className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 p-6">
-                <h2 className="text-xl font-bold mb-4 tracking-widest uppercase">
+              <div className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 p-4 md:p-6">
+                <h2 className="text-lg md:text-xl font-bold mb-4 tracking-widest uppercase">
                   주문 상품
                 </h2>
                 <div className="space-y-4">
@@ -210,45 +210,45 @@ export default function CheckoutPage() {
                     cart.map((item) => (
                       <div
                         key={item.productId}
-                        className="flex items-center gap-4 pb-4 border-b border-zinc-200 dark:border-zinc-800 last:border-0"
+                        className="flex flex-col sm:flex-row items-start sm:items-center gap-3 md:gap-4 pb-4 border-b border-zinc-200 dark:border-zinc-800 last:border-0"
                       >
                         {item.imageUrl && (
                           <img
                             src={item.imageUrl}
                             alt={item.name}
-                            className="w-20 h-20 object-cover rounded"
+                            className="w-16 h-16 md:w-20 md:h-20 object-cover rounded flex-shrink-0"
                           />
                         )}
-                        <div className="flex-1">
-                          <h3 className="font-semibold mb-2">{item.name}</h3>
+                        <div className="flex-1 min-w-0 w-full">
+                          <h3 className="font-semibold mb-2 truncate">{item.name}</h3>
                           <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-2">
                             {formatPrice(item.price)}원
                           </p>
                           {/* 수량 조절 */}
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => handleDecrease(item.productId)}
-                              className="w-8 h-8 flex items-center justify-center border border-zinc-300 dark:border-zinc-700 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-                              aria-label="수량 감소"
-                            >
-                              −
-                            </button>
-                            <span className="w-12 text-center text-sm font-medium">
-                              {item.quantity}개
-                            </span>
-                            <button
-                              onClick={() => handleIncrease(item.productId)}
-                              className="w-8 h-8 flex items-center justify-center border border-zinc-300 dark:border-zinc-700 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-                              aria-label="수량 증가"
-                            >
-                              +
-                            </button>
+                          <div className="flex items-center justify-between sm:justify-start gap-3">
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => handleDecrease(item.productId)}
+                                className="w-8 h-8 flex items-center justify-center border border-zinc-300 dark:border-zinc-700 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                                aria-label="수량 감소"
+                              >
+                                −
+                              </button>
+                              <span className="w-12 text-center text-sm font-medium">
+                                {item.quantity}개
+                              </span>
+                              <button
+                                onClick={() => handleIncrease(item.productId)}
+                                className="w-8 h-8 flex items-center justify-center border border-zinc-300 dark:border-zinc-700 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                                aria-label="수량 증가"
+                              >
+                                +
+                              </button>
+                            </div>
+                            <p className="font-bold text-base md:text-lg whitespace-nowrap">
+                              {formatPrice(item.price * item.quantity)}원
+                            </p>
                           </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold">
-                            {formatPrice(item.price * item.quantity)}원
-                          </p>
                         </div>
                       </div>
                     ))
@@ -257,8 +257,8 @@ export default function CheckoutPage() {
               </div>
 
               {/* 결제 수단 안내 */}
-              <div className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 p-6">
-                <h2 className="text-xl font-bold mb-4 tracking-widest uppercase">
+              <div className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 p-4 md:p-6">
+                <h2 className="text-lg md:text-xl font-bold mb-4 tracking-widest uppercase">
                   결제 수단
                 </h2>
                 <div className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded">
@@ -276,8 +276,8 @@ export default function CheckoutPage() {
 
             {/* 주문 요약 */}
             <div className="lg:col-span-1">
-              <div className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 p-6 sticky top-4">
-                <h2 className="text-xl font-bold mb-4 tracking-widest uppercase">
+              <div className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 p-4 md:p-6 lg:sticky lg:top-4">
+                <h2 className="text-lg md:text-xl font-bold mb-4 tracking-widest uppercase">
                   주문 요약
                 </h2>
                 <div className="space-y-4 mb-6">
@@ -310,7 +310,7 @@ export default function CheckoutPage() {
                 <button
                   onClick={handlePayment}
                   disabled={isLoading || !isPaymentReady || cart.length === 0}
-                  className="w-full py-3 px-6 bg-[#03C75A] hover:bg-[#02B350] text-white font-bold tracking-widest uppercase rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="w-full py-3 px-4 md:px-6 bg-[#03C75A] hover:bg-[#02B350] text-white font-bold text-sm md:text-base tracking-widest uppercase rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {isLoading 
                     ? '처리 중...' 

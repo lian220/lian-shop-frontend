@@ -98,8 +98,14 @@ export default function Header() {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
-      if (!target.closest('.user-menu-container') && !target.closest('.mobile-menu-container')) {
+      
+      // 사용자 메뉴: 버튼이나 메뉴 내부 클릭이 아니면 닫기
+      if (isUserMenuOpen && !target.closest('.user-menu-container')) {
         setIsUserMenuOpen(false);
+      }
+      
+      // 모바일 메뉴: 버튼이나 메뉴 내부 클릭이 아니면 닫기
+      if (isMobileMenuOpen && !target.closest('.mobile-menu-button') && !target.closest('.mobile-menu-content')) {
         setIsMobileMenuOpen(false);
       }
     };
@@ -115,11 +121,11 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 shadow-sm">
-      <div className="container mx-auto px-4">
+      <div className="w-full px-4 max-w-screen-2xl mx-auto">
         <div className="flex items-center justify-between h-16">
           {/* 로고 */}
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <Link href="/" className="flex items-center space-x-2 flex-shrink-0">
+            <div className="text-xl md:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               Lian Shop
             </div>
           </Link>
@@ -168,7 +174,7 @@ export default function Header() {
           </nav>
 
           {/* 우측 아이콘들 */}
-          <div className="flex items-center space-x-2 md:space-x-4">
+          <div className="flex items-center space-x-1 md:space-x-4">
             {/* 검색 아이콘 */}
             <button className="p-2 text-zinc-700 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
               <svg
@@ -292,7 +298,9 @@ export default function Header() {
             {/* 모바일 햄버거 메뉴 버튼 */}
             <button 
               onClick={toggleMobileMenu}
-              className="md:hidden p-2 text-zinc-700 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors mobile-menu-container"
+              className="md:hidden p-2 text-zinc-700 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors mobile-menu-button"
+              aria-label="메뉴"
+              aria-expanded={isMobileMenuOpen}
             >
               <svg
                 className="w-6 h-6"
@@ -322,7 +330,7 @@ export default function Header() {
 
         {/* 모바일 메뉴 */}
         {isMobileMenuOpen && (
-          <div className="md:hidden mobile-menu-container border-t border-zinc-200 dark:border-zinc-800">
+          <div className="md:hidden mobile-menu-content border-t border-zinc-200 dark:border-zinc-800">
             <nav className="py-4 space-y-2">
               <Link
                 href="/"
@@ -379,7 +387,30 @@ export default function Header() {
                 소개
               </Link>
               
-              {/* 로그인/회원가입 버튼 (모바일에서만 표시) */}
+              {/* 사용자 정보 및 로그아웃 (로그인 상태) */}
+              {mounted && user && (
+                <div className="px-4 pt-4 pb-2 space-y-2 border-t border-zinc-200 dark:border-zinc-800">
+                  <div className="px-2 py-2 text-sm text-zinc-700 dark:text-zinc-300">
+                    <div className="font-medium">{user.name}</div>
+                    <div className="text-xs text-zinc-500 dark:text-zinc-400">{user.email}</div>
+                    {user.role === 'ADMIN' && (
+                      <div className="mt-1">
+                        <span className="inline-block px-2 py-0.5 text-xs font-semibold bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded">
+                          관리자
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="block w-full text-center px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
+                  >
+                    로그아웃
+                  </button>
+                </div>
+              )}
+              
+              {/* 로그인/회원가입 버튼 (비로그인 상태) */}
               {mounted && !user && (
                 <div className="px-4 pt-4 pb-2 space-y-2 border-t border-zinc-200 dark:border-zinc-800">
                   <Link
